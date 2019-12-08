@@ -1,0 +1,34 @@
+Lecture 03　複製、分片與分段
+--------------------------------------------------------------------------------
+3-1　partition
+
+1.優、缺點
+  (1)平行儲存處理，具備更高吞吐量(throughput)。
+  (2)叢集開檔繁多造成延遲；且當leader故障時，將有更多(同步,insynchronous)備選者。
+  (3)若中途變更設定，無法確保key寫入同份partition。
+
+2.數量上以不超過10為限，單台broker負責一至二份partition。
+
+--------------------------------------------------------------------------------
+3-2　replication
+
+1.優、缺點
+  (1)備份複製保存，具備高彈性(resilience)及叢集容錯率。
+  (2)多主機運作、回應易延遲(latency)；且占據硬體儲放空間。
+  (3)若中途變更設定，可能影響叢集負載及空間效能。
+
+2.數量上以2或3為原則，視broker數量決定replication factor。
+
+--------------------------------------------------------------------------------
+3-3　segment
+
+1.為了訊息記錄(log)、管理之便，單一partition可再細分為多個segment。
+
+2.segment可設定分段條件
+  (1)容量分段(log.segment.bytes):達特定容量則新增一segment，預設為1GB。
+  (2)時間分段(log.roll.hours/ms):達特定時間則新增一segment，預設為1週。
+
+3.承上，資料(record)在實際寫入segment時，也同時攜帶offset(位置)及timestamp(時間)兩項參數。
+  故從topic擷取出的一筆資料，除topic,broker,partition及key-value外，尚有offset及timestamp等訊息。
+
+4.除正在寫入之segment為active外，其餘均為non-active。
