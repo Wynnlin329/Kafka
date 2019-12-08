@@ -37,8 +37,7 @@ Lecture 05　資料流(2)
 3.再平衡(rebalance)
   (1)當consumer提出讀取要求，連線之broker即需統籌讀取工作。
   (2)若為多機台組成consumer group，broker則需負責工作分配，稱為協調者(group coordinator)
-     同時群組需選出consumer leader，作為工作對接窗口。
-     
+     同時群組需選出consumer leader，作為工作對接窗口。     
   (3)工作步驟
      a.heartbeat:協調者定時發送信號，偵測群組成員是否異動。
      b.協調者將成員名單發送給consumer leader，由leader完成工作分配(partition assignment)。
