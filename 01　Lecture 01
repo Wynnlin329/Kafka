@@ -8,8 +8,8 @@ Lecture 01　kafka概論
 　常適用於讀、寫工作龐雜且亟需同步化、高可用及延展性的商業運作中。
 
 2.基本角色
-　(1)輸入源(source):稱為producer。負責將資料寫入，可為Oracle, PyCharm等。
-　(2)輸出槽(sink):稱為consumer。負責將資料讀出，可為PyCharm, ES(elastic-search)等。
+　(1)輸入源(source):稱為producer。負責將資料寫入，可為Oracle,PyCharm等。
+　(2)輸出槽(sink):稱為consumer。負責將資料讀出，可為PyCharm,ES(elastic-search)等。
 
 3.與HDFS之比較
 　(1)均可做map reduce(=partition，資料分片)，透過平行運算增進處理效率。
@@ -23,20 +23,20 @@ Lecture 01　kafka概論
 
 1.topic
   (1)形如資料庫中之資料表，以topic-name作為區別。
-　(2)由一至多台broker組成，即所謂多台叢集(cluster)。
+  (2)由一至多台broker組成，即所謂多台叢集(cluster)。
 
 2.broker
   (1)為實體或虛擬機環境(server)，以id作為區別。
-　(2)為topic之實作對象，連上單一broker即可與所有叢集機台對接。
-　(3)由一至多個partition組成，即所謂資料分片(map reduce)。
+  (2)為topic之實作對象，連上單一broker即可與所有叢集機台對接。
+  (3)由一至多個partition組成，即所謂資料分片(map reduce)。
 
 3.partition
   (1)作資料分散儲存用，為逐筆紀錄(record)寫入之處。
-　(2)限定讀取於不同成員，故N份partition最多給N台consumer group讀取。
-　(3)已寫入者無法變更。確保單一partition具備順序及key之一致性。
+  (2)限定讀取於不同成員，故N份partition最多給N台consumer group讀取。
+  (3)已寫入者無法變更。確保單一partition具備順序及key之一致性。
 
 4.replication:
   (1)作資料複製備份用，為異地備源保存之處。
-　(2)限定實作於不同機台，故N台叢集(cluster)最多能有N份replication。
+  (2)限定實作於不同機台，故N台叢集(cluster)最多能有N份replication。
      例:一5 brokers叢集，最多可設置R.F.=5(即各broker都具其他台之複製備份)
-　　　　若設定R.F.=3，則可容許5-3台broker發生離線或故障，藉此提升運作彈性。
+        若設定R.F.=3，則可容許5-3台broker發生離線或故障，藉此提升運作彈性。
