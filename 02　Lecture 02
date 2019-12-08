@@ -1,0 +1,32 @@
+Lecture 02　資訊流(1)
+--------------------------------------------------------------------------------
+2-1　輸入源
+
+1.由producer負責，需言明topic及(至少一台)broker方可匯入資料。
+
+2.資料為逐筆寫入，以字典(鍵-值對)方式寫入。在不中途更動partition之下，key能確保儲入同份partition。
+  例:寫入一筆紀錄(record)時，topic,broker及value為必需提供；key及partition則非必要。
+
+3.輸入模式(acks=)
+  -1，等待所有叢集之回應，具備高完整性。
+　 0，不等待任何機台回應，具備高度效率。
+　+1，待partition leader回應，折衷作法。
+
+--------------------------------------------------------------------------------
+2-2　輸出槽
+
+1.由consumer負責，需言明topic及(至少一台)broker方可讀出資料。
+
+2.consumer可組成group共同讀取，成員可讀多份partition，然同一partition只會被一成員讀取。
+  藉此防範資料拆分，故當成員數>partition，將導致有consumer工作閒置。
+
+3.__consumer_offset
+  (1)用以儲放讀取紀錄(commit record)的資料表，是kafka自動建立之topic。
+  (2)key=[group,topic,partition],value=[offset(工作位置，即最新尚未讀取部分)] 
+     以group為單位，故群組成員之增減雖導致rebalance(再平衡)，但不影響整體讀取工作。
+     topic+partition確保訊息的寫入與讀出均合乎順序(FIFO,first-in-first-out)
+
+4.讀取模式
+  <1，當資料傳出便記錄，無法確保consumer讀取。
+  =1，資料送達時即記錄，確保資料恰被讀取一次。
+  >1，資料讀取後才記錄，資料有可能被重複讀取。
