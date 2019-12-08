@@ -1,0 +1,59 @@
+Lecture 04　記錄檔與參數設定
+--------------------------------------------------------------------------------
+4-1　記錄檔(log-cleanup)
+
+1.log檔儲存資料寫入、讀取之動作記錄，隨資料龐生有兩種清理模式。
+
+2.log.cleanup.policy=delete
+  (1)預設於一般user-topics，原理與segment分段相同，需設定驅動條件。
+  (2)清理規則
+  　 容量清理(log.retention.bytes):僅保留特定容量大小之動作記錄，預設為-1(無限)。
+     時間清理(log.retention.hours):僅保留最近時間區段之動作記錄，預設為168(一週)。
+     兩者擇一即可，如bytes=500(MB)、hours=17520(兩年，相當於無限)。
+  (3)資料無法往前回溯，僅可處理限定範圍內之維護(maintenance)。
+
+3.log.cleanup.policy=compact
+  (1)預設於__consumer_offsets，以key為記錄維護主體，無時間、容量限制。
+  (2)清理規則
+  　 non-active:僅保留segment中相同key之最後一筆讀、寫狀態。
+     active:不清理正在寫入之segment，故所有動作記錄均會保留。
+     只要涉及active segment就可能讀到重複之key資料，除非單看non-active。
+  (3)資料可以往前回溯，但無法被更改或重組(re-order)排序。
+
+--------------------------------------------------------------------------------
+4-2　自定義參數
+
+1.kafka之預設參數皆可藉指令手動更改，包含topic,broker configuration。
+
+2.topic configuration
+  (1)針對整個topic(資料表)設定，可參考官方文件(https://kafka.apache.org/documentation/#topicconfigs)。
+  (2)常見參數
+     compression.type:針對非位元(non-binary)資料，如json,xml及文本(text)等。
+     max.message.bytes(default=1MB)、min.insync.replicas(default=1)等。
+
+3.broker configuration
+  (1)針對單台broker(環境)設定，可參考官方文件(https://kafka.apache.org/documentation/#brokerconfigs)。
+  (2)常見類型
+                     重啟執行   機台數   設定型態　　  儲放位置　　
+     read-only         Yes      單台      靜態  　server.properties
+     per-broker        No       單台      動態　　　　zookeeper
+     cluster-wide      No       叢集      動態　　　　zookeeper
+
+--------------------------------------------------------------------------------
+4-3　自定義格式
+
+1.kafka-topics格式
+  (1)只可設定topic configuration，需載明zookeeper+topic名稱。
+  (2)功能指令
+     增(C):--create \ --config
+     查(R):--describe
+     改(U):--alter \ --config
+     刪(D):--alter \ --delete-config
+
+2.kafka-configs格式
+  (1)可以設定topic及broker configuration，需載明zookeeper+entity參數。
+　　 例:--entity-type(topics/brokers)、--entity-name(topic name/broker id)。
+  (2)功能指令
+     查(R):--describe
+     改(U):--alter \ --add-config
+     刪(D):--alter \ --delete-config
