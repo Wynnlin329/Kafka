@@ -1,0 +1,66 @@
+Lecture 05　資料流(2)
+--------------------------------------------------------------------------------
+5-1　資料寫入(produce)
+
+1.參數提供
+　需言明topic及至少一台broker(以連線至叢集)方可匯入。
+　key可不提供但value不得為空值，依key決定資料寫入partition之模式:輪放(round robin)或類叢。
+　topic,broker及value為必要提供，key及partition則為非必要。
+
+2.寫入模式
+  (1)fire-and-forget: producer.poll()
+     資料發送後便繼續運作。效率最高，但有遺失之慮。
+  (2)synchronous send: producer.flush()
+     同步化追蹤資料之寫入。確保資料完整，但效率低。
+  (3)asynchronous send: producer.poll()+callback(觸發非同步狀態回報)
+     非同步化追蹤資料寫入。完整性及效能之折衷做法。
+
+3.其他寫入設定
+  (1)acks:分為-1(最完整)、0(高效率)、+1(折衷)，詳見2-1。
+  (2)max.in.flight.requests.per.connection:設定為1，可確保紀錄寫入順序。
+     確保紀錄依key寫入，則需提供key且不中途更動partition。
+  (3)retries(寫入失敗時重試)、serializer(序/反序列化寫入)等。
+
+--------------------------------------------------------------------------------
+5-2　資料讀取(consume)
+
+1.參數提供
+  需言明topic及至少一台broker(以連線至叢集)方可讀出。
+
+2.consumer group
+  (1)consumer可組成group共同讀取，成員可讀多份partition，然同一partition只會被一成員讀取。
+     藉此防範資料拆分，故當成員數>partition，將導致有consumer工作閒置。
+  (2)kafka自動建立__consumer_offset以儲放資料之讀取紀錄(commit record)。
+     key=[group,topic,partition],value=[offset(工作位置，即最新尚未讀取部分)]
+     以group(id)為單位，故群組成員增減雖導致rebalance(再平衡)，但不影響整體讀取工作。
+     
+3.再平衡(rebalance)
+  (1)當consumer提出讀取要求，連線之broker即需統籌讀取工作。
+  (2)若為多機台組成consumer group，broker則需負責工作分配，稱為協調者(group coordinator)
+     同時群組需選出consumer leader，作為工作對接窗口。
+     
+  (3)工作步驟
+     a.heartbeat:協調者定時發送信號，偵測群組成員是否異動。
+     b.協調者將成員名單發送給consumer leader，由leader完成工作分配(partition assignment)。
+     c.協調者將leader回傳之工作分配發送給所有群組成員。
+       再平衡觸發後，成員負責partition可能改變，__consumer_offset便可提供讀取進度之查考。
+  (4)觸發時機
+     群組成員變動(新增、刪除、忙線而被判定dead，不再接收assignment)
+     partition變動(新增)
+
+4.讀取模式
+　提出讀取要求，一次(要求)之回應可能包含一至多筆紀錄(record)之讀取。
+  (1)automatic commit: enable.auto.commit=true
+     對於讀取回應，以指定週期做commit，效率穩定但缺乏彈性、無法處理中途漏讀資料。
+  (2)synchronous commit: asynchronous=false
+     對於讀取回應，逐次同步化做commit，資料完整但缺乏效率。
+  (3)asynchronous commit: asynchronous=true+on_commit(類似callback)
+     對於讀取回應，逐次非同步做commit，為完整性及效能折衷。
+　(4)commit-specified:
+     對於讀取回應中之逐筆資料做commit。
+
+5.其他讀取設定
+  (1)rebalance listener:再平衡觸發時之回應
+     讀取工作即時commit、列印觸發前後之分工變化(on_revoke,on_assign)。
+  (2)auto.offset.reset:讀取模式，分為最初(earliest)及創建後(latest)
+     缺乏紀錄時，則依模式由不同處讀取起；若有紀錄則以__consumer_offset為準。
